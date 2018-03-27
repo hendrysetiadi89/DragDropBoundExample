@@ -1,17 +1,15 @@
 package com.example.nakama.dragdropexample;
 
-import android.content.ClipData;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.view.DragEvent;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.ImageView;
+import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -64,6 +62,13 @@ public class MainActivity extends AppCompatActivity {
             }
         }));
 
+        imageView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(MainActivity.this, "Test", Toast.LENGTH_LONG).show();
+            }
+        });
+
 
 //        frame.setOnDragListener(new OnDragTouchListener(imageView));
 //        frame.setOnDragListener(new View.OnDragListener() {
@@ -101,6 +106,8 @@ public class MainActivity extends AppCompatActivity {
 
     public static class OnDragTouchListener implements View.OnTouchListener {
 
+        public static final int PERFORM_CLICK_OFFSET_PX = 1;
+
         /**
          * Callback used to indicate when the drag is finished
          */
@@ -128,11 +135,13 @@ public class MainActivity extends AppCompatActivity {
         private int width;
         private float maxLeft;
         private float maxRight;
+        private float startX;
         private float dX;
 
         private int height;
         private float maxTop;
         private float maxBottom;
+        private float startY;
         private float dY;
 
         private OnDragActionListener mOnDragActionListener;
@@ -213,7 +222,15 @@ public class MainActivity extends AppCompatActivity {
 
                 switch (event.getAction()) {
                     case MotionEvent.ACTION_CANCEL:
+                        onDragFinish();
+                        break;
                     case MotionEvent.ACTION_UP:
+                        if (startY <= v.getY() + PERFORM_CLICK_OFFSET_PX &&
+                                startY >= v.getY() - PERFORM_CLICK_OFFSET_PX &&
+                                startX <= v.getX() + PERFORM_CLICK_OFFSET_PX &&
+                                startX >= v.getX() - PERFORM_CLICK_OFFSET_PX) {
+                            v.performClick();
+                        }
                         onDragFinish();
                         break;
                     case MotionEvent.ACTION_MOVE:
@@ -230,8 +247,10 @@ public class MainActivity extends AppCompatActivity {
                         if (!isInitialized) {
                             updateBounds();
                         }
-                        dX = v.getX() - event.getRawX();
-                        dY = v.getY() - event.getRawY();
+                        startX = v.getX();
+                        dX = startX - event.getRawX();
+                        startY = v.getY();
+                        dY = startY - event.getRawY();
                         if (mOnDragActionListener != null) {
                             mOnDragActionListener.onDragStart(mView);
                         }
@@ -248,6 +267,8 @@ public class MainActivity extends AppCompatActivity {
 
             dX = 0;
             dY = 0;
+            startX = 0;
+            startY = 0;
             isDragging = false;
         }
     }
